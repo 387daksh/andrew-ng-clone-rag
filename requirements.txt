@@ -1,0 +1,12 @@
+streamlit
+google-generativeai
+sentence-transformers
+chromadb
+python-dotenv
+pypdf
+beautifulsoup4
+requests
+SpeechRecognition
+edge-tts
+marker-pdf
+langchain-text-splitters
