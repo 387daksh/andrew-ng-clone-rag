@@ -1,0 +1,30 @@
+[
+    {
+        "id": 1,
+        "key": "skill_level",
+        "value": "Advanced",
+        "importance": 0.9,
+        "created_at": "2026-06-02T11:16:03.257070"
+    },
+    {
+        "id": 2,
+        "key": "user_name",
+        "value": "Daksh",
+        "importance": 0.8,
+        "created_at": "2026-06-02T18:18:02.997642"
+    },
+    {
+        "id": 3,
+        "key": "topic:cnn",
+        "value": "interested",
+        "importance": 0.4,
+        "created_at": "2026-06-02T18:18:40.020159"
+    },
+    {
+        "id": 4,
+        "key": "preference",
+        "value": "simpler models over complex ones",
+        "importance": 0.9,
+        "created_at": "2026-06-02T12:56:56.359458"
+    }
+]
