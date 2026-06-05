@@ -6,22 +6,10 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 from rag import retrieve_context
-from memory import (
-    init_db,
-    extract_long_term_memories,
-    save_memory,
-    search_memory,
-    list_memories,
-    delete_memory,
-    get_latest_memory_value,
-)
+from memory import ( init_db, extract_long_term_memories, save_memory, search_memory, list_memories, delete_memory, get_latest_memory_value,)
 from prompts import build_prompt, format_chat_history, format_memories_for_prompt
 from timeline import load_timeline, format_timeline_for_prompt
-from voice_clone import (
-    clone_voice_to_wav_bytes,
-    has_reference_voice,
-    load_chatterbox_model,
-)
+from voice_clone import ( clone_voice_to_wav_bytes, has_reference_voice, load_chatterbox_model,)
 
 try:
     import speech_recognition as sr
@@ -299,7 +287,7 @@ def render_memory_dashboard():
             st.error("Memory not found or invalid ID.")
 
 def main():
-    load_dotenv()
+    load_dotenv(override=True)
     init_db()
 
     st.set_page_config(page_title=APP_TITLE, layout="wide")
