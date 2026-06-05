@@ -47,10 +47,30 @@ def clone_voice_to_wav_bytes(model, text, reference_path=REFERENCE_PATH):
     except ImportError as exc:
         raise RuntimeError("torchaudio is required for cloned voice output.") from exc
 
-    wav = model.generate(
-        str(text).strip(),
-        audio_prompt_path=str(reference_path),
-    )
+    try:
+        ref_wav, ref_sr = torchaudio.load(str(reference_path))
+        if ref_wav.shape[0] > 1:
+            ref_wav = ref_wav.mean(dim=0, keepdim=True)
+        if ref_sr != model.sr:
+            import torchaudio.transforms as T
+            resampler = T.Resample(ref_sr, model.sr)
+            ref_wav = resampler(ref_wav)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_ref:
+            temp_ref_path = tmp_ref.name
+        torchaudio.save(temp_ref_path, ref_wav, model.sr)
+    except Exception as exc:
+        raise RuntimeError(f"Failed to process reference audio: {exc}")
+
+    try:
+        wav = model.generate(
+            str(text).strip(),
+            audio_prompt_path=temp_ref_path,
+        )
+    finally:
+        try:
+            os.remove(temp_ref_path)
+        except OSError:
+            pass
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
         output_path = tmp.name
