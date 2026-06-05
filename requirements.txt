@@ -2,11 +2,12 @@ streamlit
 google-generativeai
 sentence-transformers
 chromadb
+rank-bm25
 python-dotenv
 pypdf
+PyMuPDF
 beautifulsoup4
 requests
 SpeechRecognition
 edge-tts
-marker-pdf
 langchain-text-splitters

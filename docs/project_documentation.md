@@ -85,7 +85,17 @@ When a user types a message, the memory system parses the input using two cooper
 ## 5. User Interface & Demo Orchestration
 
 The front-end is served by a highly optimized, linear Streamlit script ([app.py](file:///e:/andrewng%20rag/digital_twin_andrew_ng/app.py)):
-1.  **Sidebar Configuration**: Allows adjusting the model name, retrieval parameters (`top-k`), temperature, and learning profiles.
+1.  **Sidebar Configuration**: Allows adjusting the model name, retrieval parameters (`top-k`), temperature, and learning profiles. Includes the Voice Clone settings to switch between cloned voice synthesis and standard text-to-speech output.
 2.  **Chat Canvas**: Renders message bubbles dynamically from session state.
-3.  **Integrated Voice Portal**: Enables uploading audio files (`.wav`/`.flac`), transcribing them via standard speech-recognition, and sending them directly through the RAG cycle.
+3.  **Integrated Voice Portal**: Enables recording questions directly or uploading audio files (`.wav`/`.flac`), transcribing them via standard speech-recognition, and sending them directly through the RAG cycle.
 4.  **Grounding Panels**: Expandable widgets display the retrieved chunks, matching source metadata, and long-term memory logs so the entire execution is completely transparent and easy to demonstrate.
+
+---
+
+## 6. Voice Cloning & Synthesis
+
+To provide vocal feedback, the app integrates dual-mode text-to-speech synthesis:
+*   **Standard TTS**: Uses `edge-tts` to generate high-quality default speech streams matching standard assistant voices.
+*   **Voice Cloning**: Employs a local `chatterbox-tts` model (`ChatterboxTurboTTS`) executing on CPU/CUDA to synthesize custom voice replicas.
+    *   **Reference File**: The model reads a target 10-20 second WAV audio recording located strictly at `database/voices/my_voice.wav`.
+    *   **Execution**: When a user selects "My cloned voice", the app passes the assistant response text and the reference recording to the chatterbox engine to synthesize and output a matched wav file. If the reference WAV file is missing, the app defaults back to standard voice generation.

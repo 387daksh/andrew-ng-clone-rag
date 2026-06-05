@@ -17,6 +17,11 @@ from memory import (
 )
 from prompts import build_prompt, format_chat_history, format_memories_for_prompt
 from timeline import load_timeline, format_timeline_for_prompt
+from voice_clone import (
+    clone_voice_to_wav_bytes,
+    has_reference_voice,
+    load_chatterbox_model,
+)
 
 try:
     import speech_recognition as sr
@@ -29,6 +34,10 @@ except ImportError:
     edge_tts = None
 
 APP_TITLE = "Digital Twin of Andrew Ng"
+
+@st.cache_resource(show_spinner="Loading the local voice model...")
+def get_voice_clone_model():
+    return load_chatterbox_model()
 
 def transcribe_audio_bytes(audio_bytes, suffix):
     if sr is None:
@@ -173,12 +182,18 @@ def render_chat_page(settings):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    with st.expander("Voice Interaction", expanded=False):
-        upload = st.file_uploader("Upload audio (wav or flac)", type=["wav", "flac"])
-        if upload is not None and sr is not None:
-            if st.button("Transcribe and Send"):
-                suffix = os.path.splitext(upload.name)[1] or ".wav"
-                transcript, error = transcribe_audio_bytes(upload.read(), suffix)
+    with st.expander("Voice Interaction", expanded=True):
+        st.caption("Record a question, then send it through the chat.")
+        recording = st.audio_input("Record your question", sample_rate=16000)
+        upload = st.file_uploader(
+            "Or upload audio (wav or flac)",
+            type=["wav", "flac"],
+        )
+        voice_input = recording or upload
+        if voice_input is not None and sr is not None:
+            if st.button("Transcribe and Send", type="primary"):
+                suffix = os.path.splitext(voice_input.name)[1] or ".wav"
+                transcript, error = transcribe_audio_bytes(voice_input.getvalue(), suffix)
                 if error:
                     st.error(error)
                 elif transcript.strip():
@@ -196,6 +211,7 @@ def render_chat_page(settings):
                         st.session_state.last_sources = sources
                         st.session_state.last_chunks = chunks
                         st.session_state.last_response = response_text
+                        st.session_state.speak_last_response = settings["auto_speak"]
                         st.rerun()
 
     user_query = st.chat_input("Your message...")
@@ -214,6 +230,7 @@ def render_chat_page(settings):
             st.session_state.last_sources = sources
             st.session_state.last_chunks = chunks
             st.session_state.last_response = response_text
+            st.session_state.speak_last_response = settings["auto_speak"]
             st.rerun()
 
     with st.expander("Sources panel", expanded=False):
@@ -224,22 +241,30 @@ def render_chat_page(settings):
 
     if st.session_state.last_response:
         st.write("Generate a voice reply:")
-        voice = st.selectbox(
-            "Voice",
-            ["en-US-GuyNeural", "en-US-AriaNeural", "en-US-JennyNeural"],
-            key="tts_voice",
-        )
+        voice_mode = settings["voice_mode"]
         if st.button("Speak reply"):
-            if edge_tts is None:
-                st.error("edge-tts is not installed.")
-            else:
-                audio_bytes, error = tts_audio_bytes(
-                    st.session_state.last_response, voice=voice
-                )
-                if error:
-                    st.error(error)
+            st.session_state.speak_last_response = True
+
+        if st.session_state.speak_last_response:
+            try:
+                if voice_mode == "My cloned voice":
+                    model = get_voice_clone_model()
+                    audio_bytes = clone_voice_to_wav_bytes(
+                        model, st.session_state.last_response
+                    )
+                    st.audio(audio_bytes, format="audio/wav", autoplay=True)
                 else:
-                    st.audio(audio_bytes, format="audio/mp3")
+                    audio_bytes, error = tts_audio_bytes(
+                        st.session_state.last_response,
+                        voice=settings["edge_voice"],
+                    )
+                    if error:
+                        raise RuntimeError(error)
+                    st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+            except Exception as exc:
+                st.error(f"Could not generate voice reply: {exc}")
+            finally:
+                st.session_state.speak_last_response = False
 
 def render_memory_dashboard():
     st.title("Memory Dashboard")
@@ -287,6 +312,8 @@ def main():
         st.session_state.last_chunks = []
     if "last_response" not in st.session_state:
         st.session_state.last_response = ""
+    if "speak_last_response" not in st.session_state:
+        st.session_state.speak_last_response = False
 
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
@@ -304,6 +331,24 @@ def main():
         if profile_choice != "Auto" and st.button("Save profile"):
             save_memory("skill_level", profile_choice, 0.9)
             st.success("Saved skill level to long-term memory.")
+
+    with st.sidebar.expander("Voice Clone", expanded=True):
+        voice_mode = st.radio(
+            "Reply voice",
+            ["My cloned voice", "Standard voice"],
+            index=0 if has_reference_voice() else 1,
+        )
+        auto_speak = st.toggle("Speak replies automatically", value=True)
+
+        edge_voice = st.selectbox(
+            "Standard voice",
+            ["en-US-GuyNeural", "en-US-AriaNeural", "en-US-JennyNeural"],
+        )
+
+        if has_reference_voice():
+            st.success("Voice reference file found in database/voices/my_voice.wav")
+        else:
+            st.info("Place your WAV voice reference file at database/voices/my_voice.wav to enable voice cloning.")
 
     with st.sidebar.expander("Memory Viewer", expanded=False):
         render_memory_table(list_memories(limit=10))
@@ -323,6 +368,9 @@ def main():
         "temperature": temperature,
         "skill_level": profile_choice,
         "chroma_dir": "database/chroma",
+        "voice_mode": voice_mode,
+        "auto_speak": auto_speak,
+        "edge_voice": edge_voice,
     }
 
     if page == "Memory Dashboard":

@@ -50,6 +50,16 @@ Launch the interactive Streamlit chatbot portal:
 streamlit run app.py
 ```
 
+### Optional: Local Voice Cloning
+
+The voice-cloning feature is intended only for your own voice or a voice you have explicit permission to use. Install its isolated dependency set:
+
+```bash
+pip install -r requirements-voice.txt
+```
+
+Place your clean 10-20 second WAV voice reference recording directly at `database/voices/my_voice.wav`. The application will automatically detect this file and enable voice cloning in the sidebar panel. Voice replies use Chatterbox Turbo.
+
 ---
 
 ## 4. Codebase Navigation

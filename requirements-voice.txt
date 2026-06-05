@@ -1,0 +1,2 @@
+# Install this separately because it pins its own CUDA/PyTorch stack.
+chatterbox-tts==0.1.7
