@@ -1,7 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
-streamlit==
-google-generativeai==
+streamlit==1.67.0
+google-generativeai==0.8.6
 sentence-transformers==6.3.0
 chromadb==1.5.9
 rank-bm25==0.2.2
