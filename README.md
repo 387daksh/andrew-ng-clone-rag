@@ -1,3 +1,13 @@
+---
+title: Digital Twin of Andrew Ng
+emoji: 🎓
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Digital Twin of Andrew Ng
 
 This repository contains a lightweight, direct, and completely reproducible AI-agent project that emulates the teaching style, timeline, and core knowledge of Andrew Ng. It combines Gemini 3.1 Flash Lite with hybrid search retrieval-augmented generation (RAG) and a plain-text JSON long-term memory system.
@@ -79,3 +89,15 @@ The repository contains 6 core self-documenting files:
 
 *   **Architecture Flowchart**: See [docs/architecture.md](file:///e:/andrewng%20rag/digital_twin_andrew_ng/docs/architecture.md) for the complete data flow.
 *   **Sample Scenarios**: Read [docs/sample_conversations.md](file:///e:/andrewng%20rag/digital_twin_andrew_ng/docs/sample_conversations.md) for 10 realistic conversations showcasing the twin's persona, precision citation accuracy, and persistent memory recall.
+
+---
+
+## 6. Deployment (Hugging Face Spaces)
+
+The repo is set up as a Docker Space (see `Dockerfile` and the front matter at the top of this README).
+
+1. Create a Space with the **Docker** SDK and upload this repo to it.
+2. In the Space's **Settings → Variables and secrets**, add a secret named `GEMINI_API_KEY`.
+3. The Space builds and serves the app on port 7860.
+
+Notes: the bundled `database/chroma` index is used as-is (no ingest step needed). Memories written at runtime live on the Space's ephemeral disk and reset on restart. Voice cloning (`requirements-voice.txt`) is not installed in the Space; the standard Edge TTS voice works.
